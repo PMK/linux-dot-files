@@ -1,0 +1,9 @@
+#!/bin/sh
+# This script is to give the VPS hoster temporary access to this machine
+
+if [ "$#" != 1 ]; then
+  echo "Error: 1 argument (enable|disable) is required to run this script."
+  exit 1
+fi
+
+#

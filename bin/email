@@ -1,0 +1,20 @@
+#!/bin/sh
+
+# Send email from system
+# install: X_SERVER_EMAIL=foo@baz.com; X_SERVER_NAME=Foo;
+# usage: echo "my email message" | email "new event happened"
+# Original source: https://gist.github.com/coderofsalvation/8270415
+
+content="$(cat - )"
+
+subject="Message from server"
+if [ "$#" == 1 ]; then
+  subject="$1"
+fi
+
+{
+  echo "Subject: $(date +%F) - $subject"
+  echo "From: $X_SERVER_NAME <$X_SERVER_EMAIL>";
+  echo "To: $X_SERVER_EMAIL";
+  echo "\n$content"
+} | $(which sendmail) -F "$X_SERVER_EMAIL" "$X_SERVER_EMAIL"

@@ -1,0 +1,44 @@
+#!/bin/sh
+
+# install: X_SERVER_NAME='Foo'; $X_BACKUP_PASS='1234'
+
+X_BACKUP_PATH="/tmp/backup"
+X_BACKUP_FILE=`printf "%s/%s_%s.tar.gz" "$X_BACKUP_PATH" "$X_SERVER_NAME" "\`date +%F\`"`
+X_MOUNTDIR="/srv/stack"
+
+# Cleanup
+rm -rf $X_BACKUP_PATH/email
+
+# Backup mail
+mkdir -p $X_BACKUP_PATH/email
+BACKUP_LOCATION=$X_BACKUP_PATH/email ~/docker/email/helper-scripts/backup_and_restore.sh backup all
+
+# Backup sites
+mkdir -p $X_BACKUP_PATH/websites
+# @TODO: access logs
+# @TODO: database
+# @TODO: storage (cdn) ?
+
+# Combine to tar package
+rm -f $X_BACKUP_FILE
+tar -zcCf $X_BACKUP_FILE $X_BACKUP_PATH/email/mailcow-* $X_BACKUP_PATH/websites/*
+
+# Send to TransIP-Stack
+if mount | grep "stack"; then
+  sudo umount $X_MOUNTDIR
+fi
+
+if sudo mount $X_MOUNTDIR; then
+  # Encrypt and save on Stack
+  sudo openssl enc -aes256-wrap -a -salt -pass pass:$X_BACKUP_PASS -in $X_BACKUP_FILE -out $X_MOUNTDIR/backup/$X_SERVER_NAME/$(date +%F).tar.gz.enc
+
+  if mount | grep "stack"; then
+    sudo umount $X_MOUNTDIR
+  fi
+else
+  echo "Mount failed, please check $X_MOUNTDIR"
+  exit 1
+fi
+
+echo "Done!"
+exit 0

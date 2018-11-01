@@ -1,0 +1,15 @@
+#!/bin/sh
+
+X_UPTIME_CURR=`cut -d ' ' -f 1 < /proc/uptime`
+X_UPTIME_MAX_IN_DAYS=60
+
+# Check if uptime gt $X_UPTIME_MAX_IN_DAYS
+X_UPTIME_MAX=`bc <<< $X_UPTIME_MAX_IN_DAYS*24*60*60`
+if [ $X_UPTIME > $X_UPTIME_MAX ]; then
+  echo "Uptime too high! - Current uptime is $X_UPTIME" | /var/lib/dot-files/bin/email "Reboot ASAP!"
+fi
+
+# Check if file 'reboot-required' exists
+if [ -f /var/run/reboot-required ]; then
+  cat /var/run/reboot-required | /var/lib/dot-files/bin/email "Reboot ASAP!"
+fi
